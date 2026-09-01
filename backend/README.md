@@ -100,3 +100,9 @@ It strips any extra fields the client sends that are not defined in the DTO, pre
 - Missing or empty input returns 400 with a descriptive message
 - Non-numeric characters are caught in the service layer
 - Card numbers outside the valid length range (13–19 digits) are rejected
+
+### Why `strict: true`?
+The spec requires it. `tsconfig.json` previously had strict mode effectively disabled via individual overrides (`noImplicitAny: false`, `strictBindCallApply: false`, no top-level `strict`), which doesn't satisfy that requirement. It's now `"strict": true` with no overrides. The one place this mattered in practice: `ValidateCardDto.cardNumber` had no initializer, which fails under `strictPropertyInitialization`; it now uses a definite assignment assertion (`cardNumber!: string`) since class-validator populates it at runtime, not in a constructor.
+
+### Why were `AppController`/`AppService` removed?
+They were unused leftovers from the Nest CLI scaffold — never registered in `AppModule` (which only imports `CardModule`), so the `GET /` "Hello World" route they defined was dead code. Their presence was also actively breaking the e2e test, which booted the real `AppModule` and asserted on a route that no longer existed. Removed the dead files and rewrote `test/card.e2e-spec.ts` to exercise the actual `/card/validate` endpoint instead.
