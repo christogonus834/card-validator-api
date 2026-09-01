@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Card Validator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    }
+
+    .header { text-align: center; margin-bottom: 32px; }
+
+    .header h1 {
+      font-size: 26px;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+    }
+
+    .header p { color: #888; font-size: 14px; }
+
+    .card-preview {
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 28px;
+      color: white;
+      position: relative;
+      min-height: 120px;
+    }
+
+    .card-type {
+      font-size: 13px;
+      opacity: 0.7;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+
+    .card-number-display {
+      font-size: 22px;
+      letter-spacing: 4px;
+      font-family: 'Courier New', monospace;
+      color: white;
+    }
+
+    .card-chip {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 36px;
+      height: 28px;
+      background: linear-gradient(135deg, #f0c040, #c8960c);
+      border-radius: 5px;
+    }
+
+    .input-group { margin-bottom: 20px; }
+
+    .input-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 18px;
+      letter-spacing: 3px;
+      font-family: 'Courier New', monospace;
+      outline: none;
+      transition: border-color 0.3s;
+      color: #1a1a2e;
+    }
+
+    .input-group input:focus { border-color: #0f3460; }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    button:hover { opacity: 0.9; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .result {
+      margin-top: 20px;
+      padding: 16px 20px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .result.valid {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 2px solid #a5d6a7;
+      display: block;
+    }
+
+    .result.invalid {
+      background: #ffebee;
+      color: #c62828;
+      border: 2px solid #ef9a9a;
+      display: block;
+    }
+
+    .result.error {
+      background: #fff3e0;
+      color: #e65100;
+      border: 2px solid #ffcc80;
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💳 Card Validator</h1>
+      <p>Enter a card number to validate it</p>
+    </div>
+
+    <div class="card-preview">
+      <div class="card-chip"></div>
+      <div class="card-type" id="cardType">● ● ● ●</div>
+      <div class="card-number-display" id="cardDisplay">**** **** **** ****</div>
+    </div>
+
+    <div class="input-group">
+      <label>Card Number</label>
+      <input
+        type="text"
+        id="cardInput"
+        placeholder="4111 1111 1111 1111"
+        maxlength="19"
+      />
+    </div>
+
+    <button id="validateBtn" onclick="validateCard()">Validate Card</button>
+
+    <div class="result" id="result"></div>
+
+    <div class="footer">Powered by Luhn Algorithm<span> Built by Drix with love</span> </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    const input = document.getElementById('cardInput');
+    const display = document.getElementById('cardDisplay');
+    const cardType = document.getElementById('cardType');
+    const result = document.getElementById('result');
+
+    // Auto-format input with spaces every 4 digits
+    input.addEventListener('input', function () {
+      let value = this.value.replace(/\D/g, '');
+      let formatted = value.match(/.{1,4}/g)?.join(' ') || '';
+      this.value = formatted;
+
+      // Update card preview
+      display.textContent = formatted || '**** **** **** ****';
+
+      // Detect card type
+      cardType.textContent = detectCardType(value);
+
+      // Clear result on new input
+      result.className = 'result';
+      result.textContent = '';
+    });
+
+    function detectCardType(number) {
+      if (/^4/.test(number)) return 'VISA';
+      if (/^5[1-5]/.test(number)) return 'MASTERCARD';
+      if (/^3[47]/.test(number)) return 'AMERICAN EXPRESS';
+      if (/^6(?:011|5)/.test(number)) return 'DISCOVER';
+      if (number.length > 0) return 'UNKNOWN';
+      return '● ● ● ●';
+    }
+
+    async function validateCard() {
+      const cardNumber = input.value.replace(/\s/g, '');
+
+      if (!cardNumber) {
+        showResult('error', '⚠️ Please enter a card number');
+        return;
+      }
+
+      const btn = document.getElementById('validateBtn');
+      btn.disabled = true;
+      btn.textContent = 'Validating...';
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/card/validate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cardNumber }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          if (data.valid) {
+            showResult('valid', '✅ Card number is valid!');
+          } else {
+            showResult('invalid', '❌ ' + data.message);
+          }
+        } else {
+          const msg = Array.isArray(data.message) ? data.message[0] : data.message;
+          showResult('error', '⚠️ ' + msg);
+        }
+      } catch (err) {
+        showResult('error', '⚠️ Could not connect to server. Is the API running?');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Validate Card';
+      }
+    }
+
+    function showResult(type, message) {
+      result.className = 'result ' + type;
+      result.textContent = message;
+    }
+  </script>
+</body>
+</html>
