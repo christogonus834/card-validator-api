@@ -37,6 +37,21 @@ The server will start at: http://localhost:3000
 
 npm run test
 
+### Environment Variables
+
+See `.env.example`:
+
+- `PORT` — defaults to 3000 locally; Render provides this automatically in production.
+- `CORS_ORIGIN` — comma-separated list of allowed origins. Leave unset to allow any origin. In production, set it to your Vercel frontend URL.
+
+## Deploying to Render
+
+A `render.yaml` blueprint is included at the root of this folder.
+
+1. Push this repo to GitHub.
+2. In Render: **New → Blueprint**, point it at the repo. Render will detect `backend/render.yaml` (root directory `backend`) and create a web service with `npm install && npm run build` as the build command and `npm run start:prod` as the start command.
+3. After the frontend is deployed to Vercel, set `CORS_ORIGIN` on the Render service to the Vercel URL and redeploy.
+
 ## API Reference
 
 ### POST /card/validate
